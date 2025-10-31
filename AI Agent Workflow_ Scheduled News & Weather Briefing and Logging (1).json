@@ -1,0 +1,458 @@
+{
+  "name": "AI Agent Workflow: Scheduled News & Weather Briefing and Logging",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a daily mini-email newsletter in Markdown format. The newsletter must include:\n\nHyderabad Weather Update (Current conditions and forecast).\n\n4-5 Recent, positive, and trending general news stories.\n\n2-3 Recent sports news stories.\n\n2-3 Recent movie/entertainment news stories.\n\n2-3 Recent political news stories (Source from Wikipedia-linked news if possible).\n\nCrucially: Ensure all news stories are fresh and have NOT been included in any previous day's output.\nToday's date \n {{ $json.timestamp }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a893c21e-9d38-44b4-afa8-32ee7ec4b68d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "074e491c-a95d-4e51-bcf0-be3aa69eb84d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9T4rMb82PjguJLFE",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "my_test_ID"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        208
+      ],
+      "id": "8612b929-c74d-4cff-9585-194766ea566f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        576,
+        208
+      ],
+      "id": "7112dff2-f406-418b-ab83-d0b336f896eb",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        944,
+        208
+      ],
+      "id": "cbc7ad38-6d16-46a5-9fd1-1432e2f2e3e5",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "jBfMbtvytYDcgQWY",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "cityName": "Hyderabad,IN"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        672,
+        304
+      ],
+      "id": "87ce7122-d1e5-48d9-a97b-3294cde48d3f",
+      "name": "OpenWeatherMap1",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "eLWuX4dwkNPMfvrs",
+          "name": "OpenWeatherMap account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "b477e129-591a-4f4d-9ab2-77fbc2ce9a5b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "periketilakshman44@gmail.com",
+        "subject": "=Daily Briefing : {{ $('Schedule Trigger').item.json['Readable date'] }}",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1312,
+        0
+      ],
+      "id": "377ed9b9-790d-4235-97c1-cd5ca0d9d4a0",
+      "name": "Send a message",
+      "webhookId": "8bf54787-1fc6-4613-a418-82c8d3823cbe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "oA88Jd5UMNzj1sSM",
+          "name": "Gmail account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        768,
+        0
+      ],
+      "id": "4cf159a3-5367-4a60-866e-a55a3b9be272",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Beautify the html using inline css .add some hover effect and colour ,decoration styles to the text and make it look attractive .output the result without any headers.",
+              "role": "model"
+            },
+            {
+              "content": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        976,
+        0
+      ],
+      "id": "80f2d216-a71f-44be-9007-389f3918606c",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9T4rMb82PjguJLFE",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-pro-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-pro-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "your job is to log the trending news, political news ,movie news ,sports news from daily breifeing in the relevant columns within google sheet document you have access to .An AI will be reading the results of your work, so be  sure to format it in concise , detailed manner that will be easy to parse with a small number of tokens.",
+              "role": "model"
+            },
+            {
+              "content": "=Daily Briefeing:\n {{ $('Markdown').item.json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "ce8d8e4b-172a-42ba-a594-d9ee1d6eedc4",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9T4rMb82PjguJLFE",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1LxYZ5NbFo44194IQSuizjXsrDzrZquZyLRDhJ-ts-Os",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1LxYZ5NbFo44194IQSuizjXsrDzrZquZyLRDhJ-ts-Os/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date ": "={{ $('Schedule Trigger').item.json.timestamp }}",
+            "Sports News": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sports_News', ``, 'string') }}",
+            "Political News": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Political_News', ``, 'string') }}",
+            "Movie News": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Movie_News', ``, 'string') }}",
+            "Trending News": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Trending_News', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date ",
+              "displayName": "Date ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trending News",
+              "displayName": "Trending News",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sports News",
+              "displayName": "Sports News",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Political News",
+              "displayName": "Political News",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Movie News",
+              "displayName": "Movie News",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1712,
+        240
+      ],
+      "id": "e62155a0-e1ff-4b6e-a70d-350b136d3cf5",
+      "name": "Append row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZnJ3EJnrRYKwlXTU",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4c41c8b6-b392-4e56-839c-1e9c21c1df11",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dd6a0e98e34eba7dd7d9ba2e4ba58333f6fcefe4623b0912565af87542cce9c4"
+  },
+  "id": "Jz8RvrqGiRlsj3YU",
+  "tags": []
+}
